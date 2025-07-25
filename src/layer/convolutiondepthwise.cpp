@@ -31,7 +31,7 @@ int ConvolutionDepthWise::load_param(const ParamDict& pd)
     pad_value = pd.get(18, 0.f);
     bias_term = pd.get(5, 0);
     weight_data_size = pd.get(6, 0);
-    group = pd.get(7, 1);
+    group = pd.get(7, 1);  //group 是深度可分离卷积和分组卷积的核心参数。它将输入和输出通道“分组”。 当 group = 1 时，它就退化成一个标准卷积
     int8_scale_term = pd.get(8, 0);
     activation_type = pd.get(9, 0);
     activation_params = pd.get(10, Mat());
@@ -77,14 +77,14 @@ int ConvolutionDepthWise::load_model(const ModelBin& mb)
         if (bias_data.empty())
             return -100;
     }
-
+    // 如果开启了 INT8
 #if NCNN_INT8
     if (int8_scale_term == 1 || int8_scale_term == 101)
     {
         weight_data_int8_scales = mb.load(group, 1);
         bottom_blob_int8_scales = mb.load(1, 1);
 
-        float bottom_blob_int8_scale = bottom_blob_int8_scales[0];
+        float bottom_blob_int8_scale = bottom_blob_int8_scales[0];    // 加载 INT8 量化所需的缩放因子 (scale)
         bottom_blob_int8_scales = Mat(group);
         bottom_blob_int8_scales.fill(bottom_blob_int8_scale);
     }
@@ -112,11 +112,13 @@ int ConvolutionDepthWise::load_model(const ModelBin& mb)
         top_blob_int8_scales.fill(top_blob_int8_scale);
     }
 #endif // NCNN_INT8
-
+    // 在加载模型时，进行权重的运行时量化 加载 Scale:
+    // INT8 量化的核心是公式 FP32_value ≈ INT8_value * scale。
+    // 为了能从 INT8 计算结果还原回浮点数，或者在 INT8 域内进行正确的运算，我们必须知道这个 scale 值。
 #if NCNN_INT8
     // runtime quantize the weight data
     if (weight_data.elemsize == (size_t)4u && int8_scale_term)
-    {
+    {   // 创建一个 elemsize=1 的 Mat 用于存放 INT8 权重
         Mat int8_weight_data(weight_data_size, (size_t)1u);
         if (int8_weight_data.empty())
             return -100;
@@ -135,7 +137,7 @@ int ConvolutionDepthWise::load_model(const ModelBin& mb)
             const Mat weight_data_int8_scales_g = weight_data_int8_scales.range(g, 1);
             quantize_to_int8(weight_data_g, int8_weight_data_g, weight_data_int8_scales_g, opt_q);
         }
-
+        // 将成员变量 weight_data 替换为量化后的 INT8 版本
         weight_data = int8_weight_data;
     }
 #endif // NCNN_INT8

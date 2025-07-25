@@ -31,12 +31,12 @@ protected:
 
 public:
     // param
-    int num_output;
+    int num_output; // // 输出通道数
     int kernel_w;
     int kernel_h;
-    int dilation_w;
+    int dilation_w; // 膨胀率
     int dilation_h;
-    int stride_w;
+    int stride_w;// // 步长
     int stride_h;
     int pad_left; // -233=SAME_UPPER -234=SAME_LOWER
     int pad_right;
@@ -53,11 +53,11 @@ public:
     int activation_type;
     Mat activation_params;
 
-    int dynamic_weight;
+    int dynamic_weight;  // 是否使用动态权重
 
     // model
-    Mat weight_data;
-    Mat bias_data;
+    Mat weight_data;  // 权重
+    Mat bias_data; // 偏置
 
 #if NCNN_INT8
     Mat weight_data_int8_scales;

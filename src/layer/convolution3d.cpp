@@ -112,7 +112,7 @@ int Convolution3D::forward(const Mat& bottom_blob, Mat& top_blob, const Option& 
     top_blob.create(outw, outh, outd, num_output, elemsize, opt.blob_allocator);
     if (top_blob.empty())
         return -100;
-
+//多一层
     #pragma omp parallel for num_threads(opt.num_threads)
     for (int p = 0; p < num_output; p++)
     {

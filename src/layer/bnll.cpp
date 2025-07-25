@@ -10,7 +10,7 @@ BNLL::BNLL()
     one_blob_only = true;
     support_inplace = true;
 }
-
+//实现 BNLL (Binomial Normal Log-Likelihood) 激活函数
 int BNLL::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
     int w = bottom_top_blob.w;

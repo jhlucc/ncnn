@@ -23,7 +23,7 @@ int CopyTo::load_param(const ParamDict& pd)
 
     return 0;
 }
-
+//将一个 Mat (source) 的内容，复制到另一个 Mat (destination) 的指定位置上。这是一个非常强大的数据操作层。
 template<typename T>
 static void copy_to_image(const Mat& src, Mat& self, int top, int left)
 {

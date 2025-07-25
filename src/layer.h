@@ -33,14 +33,16 @@ public:
     // return 0 if success
     virtual int load_model(const ModelBin& mb);
 
-    // layer implementation specific setup
+    // layer implementation specific setup  创建计算管线 (如初始化GPU资源)
     // return 0 if success
     virtual int create_pipeline(const Option& opt);
 
     // layer implementation specific clean
     // return 0 if success
     virtual int destroy_pipeline(const Option& opt);
-
+    //ReLU 层的构造函数会设置 support_inplace = true;。
+    // ncnn::Net 在调度网络执行时，会检查这些标志来决定最优的执行策略。比如，如果一个层 support_inplace，并且拓扑关系允许（即它的输入不会被其他层再次使用），Net 就会调用它的 forward_inplace 而不是
+    // forward。
 public:
     // one input and one output blob
     bool one_blob_only;
@@ -51,7 +53,7 @@ public:
     // support vulkan compute
     bool support_vulkan;
 
-    // accept input blob with packed storage
+    // accept input blob with packed storage // 支持 packing 布局 (SIMD 优化)
     bool support_packing;
 
     // accept bf16
@@ -85,12 +87,13 @@ public:
     int featmask;
 
 public:
-    // implement inference
+    // implement inference 这是所有计算的核心。每个具体的层都必须重写这个函数，以实现自己的计算逻辑。
     // return 0 if success
     virtual int forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const;
     virtual int forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const;
 
-    // implement inplace inference
+    // implement inplace inference 原地计算。这是一种优化。如果一个层的计算可以直接在输入 Mat 的内存上进行，而无需申请新的内存来存放输出（例如 ReLU 激活函数），
+    // 它就可以实现这个方法。输入 bottom_top_blobs 同时作为输入和输出。这样做可以大大减少内存分配和数据拷贝的开销。
     // return 0 if success
     virtual int forward_inplace(std::vector<Mat>& bottom_top_blobs, const Option& opt) const;
     virtual int forward_inplace(Mat& bottom_top_blob, const Option& opt) const;

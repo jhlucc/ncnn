@@ -63,7 +63,7 @@ int Deconvolution::load_model(const ModelBin& mb)
 
     return 0;
 }
-
+//也被称为转置卷积 (Transposed Convolution)。它可以看作是卷积在某种意义上的逆运算，主要用于上采样 (Upsampling)，即把一个小的特征图放大
 static int deconvolution(const Mat& bottom_blob, Mat& top_blob, const Mat& weight_data, const Mat& bias_data, int kernel_w, int kernel_h, int stride_w, int stride_h, int dilation_w, int dilation_h, int activation_type, const Mat& activation_params, const Option& opt)
 {
     const int outw = top_blob.w;

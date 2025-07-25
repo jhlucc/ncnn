@@ -39,7 +39,7 @@ Layer::Layer()
 Layer::~Layer()
 {
 }
-
+//因为不是所有层都需要实现所有这些方法
 int Layer::load_param(const ParamDict& /*pd*/)
 {
     return 0;

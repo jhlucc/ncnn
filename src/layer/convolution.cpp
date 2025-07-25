@@ -14,7 +14,7 @@ Convolution::Convolution()
     one_blob_only = true;
     support_inplace = false;
 }
-
+//load_param 做的事情就是从 .param 文件中把卷积层的所有配置项一一读出来，存到类的成员变量里。这和我们之前看的 Bias 层原理一样，只是参数更多了。
 int Convolution::load_param(const ParamDict& pd)
 {
     num_output = pd.get(0, 0);
@@ -54,7 +54,9 @@ int Convolution::load_param(const ParamDict& pd)
 
     return 0;
 }
-
+//如果不是动态权重模式，它就从 .bin 文件中：
+// 根据 weight_data_size 加载权重数据到 weight_data 这个 Mat 中。
+// 如果 bias_term 为真，就加载 num_output 个浮点数作为偏置，存入 bias_data。
 int Convolution::load_model(const ModelBin& mb)
 {
     if (dynamic_weight)
@@ -115,7 +117,7 @@ static int convolution(const Mat& bottom_blob, Mat& top_blob, const Mat& weight_
     const int w = bottom_blob.w;
     const int inch = bottom_blob.c;
 
-    const int outw = top_blob.w;
+    const int outw = top_blob.w; //// = num_output
     const int outh = top_blob.h;
     const int outch = top_blob.c;
 
@@ -141,15 +143,14 @@ static int convolution(const Mat& bottom_blob, Mat& top_blob, const Mat& weight_
             p2 += gap;
         }
     }
-
-    #pragma omp parallel for num_threads(opt.num_threads)
-    for (int p = 0; p < outch; p++)
+// 对每个输出通道并行计算    #pragma omp parallel for num_threads(opt.num_threads)
+    for (int p = 0; p < outch; p++) // 遍历每个输出通道
     {
-        float* outptr = top_blob.channel(p);
+        float* outptr = top_blob.channel(p); // 获取输出 Mat 的第 p 行指针
 
         for (int i = 0; i < outh; i++)
         {
-            for (int j = 0; j < outw; j++)
+            for (int j = 0; j < outw; j++) // 遍历输出的每个位置
             {
                 float sum = 0.f;
 
@@ -239,7 +240,7 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
             return ret;
         }
     }
-
+    // 1. Padding
     Mat bottom_blob_bordered;
     make_padding(bottom_blob, bottom_blob_bordered, opt);
     if (bottom_blob_bordered.empty())
@@ -248,13 +249,13 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
     const int w = bottom_blob_bordered.w;
     const int h = bottom_blob_bordered.h;
     const size_t elemsize = bottom_blob_bordered.elemsize;
-
+// 清朝结束了，那些遗老权贵们去哪里
     const int kernel_extent_w = dilation_w * (kernel_w - 1) + 1;
     const int kernel_extent_h = dilation_h * (kernel_h - 1) + 1;
-
+    // 2. 计算输出尺寸
     const int outw = (w - kernel_extent_w) / stride_w + 1;
     const int outh = (h - kernel_extent_h) / stride_h + 1;
-
+    // 3. 创建输出 Mat
     top_blob.create(outw, outh, num_output, elemsize, opt.blob_allocator);
     if (top_blob.empty())
         return -100;
@@ -330,12 +331,15 @@ void Convolution::make_padding(const Mat& bottom_blob, Mat& bottom_blob_bordered
     const int kernel_extent_h = dilation_h * (_kernel_h - 1) + 1;
 
     bottom_blob_bordered = bottom_blob;
+    //如果 pad_left 和 pad_right 是正数，就直接在输入的左右两边补上相应数量的零（或指定值）。
     if (pad_left > 0 || pad_right > 0 || pad_top > 0 || pad_bottom > 0)
     {
         Option opt_b = opt;
         opt_b.blob_allocator = opt.workspace_allocator;
         copy_make_border(bottom_blob, bottom_blob_bordered, pad_top, pad_bottom, pad_left, pad_right, BORDER_CONSTANT, pad_value, opt_b);
     }
+    //-233 是 ncnn 中一个特殊的魔数 (magic number)，代表了类似 TensorFlow 中的 "SAME" padding 模式。这种模式下，函数会自动计算需要 padding 的数量，以保证输出尺寸满足特定公式，从而让开发者不必手动计算 pad_left 和 pad_right。
+
     else if (pad_left == -233 && pad_right == -233 && pad_top == -233 && pad_bottom == -233)
     {
         // tensorflow padding=SAME or onnx padding=SAME_UPPER

@@ -20,7 +20,7 @@ int Cast::load_param(const ParamDict& pd)
     return 0;
 }
 
-// round to nearest
+// round to nearest将 Mat 的数据类型从一种（如 FP32）转换到另一种（如 FP16, INT8）
 signed char float32_to_int8(float value)
 {
     float tmp;
