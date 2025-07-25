@@ -15,10 +15,10 @@
 #endif // NCNN_VULKAN
 
 namespace ncnn {
-
+//深拷贝
 Mat Mat::clone(Allocator* _allocator) const
 {
-    //// 1. 处理空 Mat 的情况
+    //// 1. 处理空 Mat 的情况 但这个副本拥有自己独立的内存，修改它不会影响原始 Mat。这就是深拷贝。
     if (empty())
         return Mat();
 
@@ -38,10 +38,11 @@ Mat Mat::clone(Allocator* _allocator) const
     if (total() > 0)
     {
         if (cstep == m.cstep)
-            memcpy(m.data, data, total() * elemsize);
+            memcpy(m.data, data, total() * elemsize); //将整块内存从 data 复制到 m.data，效率最高。
         else
         {
-            // copy by channel for differnet cstep
+            // copy by channel for differnet cstep原始 Mat 可能因为某种操作导致每个通道后有空隙，而新 create 的 Mat 是紧凑的。这时，不能一次性 memcpy，否则会把空隙也拷过去，导致数据错乱。
+            // 正确的做法是，循环遍历每个通道，使用 channel(i) 获取每个通道的视图（它能正确处理 cstep），然后逐个通道地拷贝数据。
             size_t size = (size_t)w * h * d * elemsize;
             for (int i = 0; i < c; i++)
             {
@@ -57,7 +58,7 @@ void Mat::clone_from(const ncnn::Mat& mat, Allocator* allocator)
 {
     *this = mat.clone(allocator);
 }
-
+//eshape 的目标是在不改变数据内容和总元素数的前提下，改变 Mat 的维度。例如，把一个 1x100 的向量变成一个 10x10 的矩阵。
 Mat Mat::reshape(int _w, Allocator* _allocator) const
 {
     if (w * h * d * c != _w)
@@ -221,33 +222,33 @@ Mat Mat::reshape(int _w, int _h, int _d, int _c, Allocator* _allocator) const
 }
 
 void Mat::create(int _w, size_t _elemsize, Allocator* _allocator)
-{
+{ // // 1. 优化：如果请求的 Mat 与当前完全一样，直接返回
     if (dims == 1 && w == _w && elemsize == _elemsize && elempack == 1 && allocator == _allocator)
         return;
-
+  // 2. 释放旧资源
     release();
-
+    // 3. 设置新的元数据
     elemsize = _elemsize;
     elempack = 1;
     allocator = _allocator;
-
+    // 4. 计算通道步长 (考虑对齐)
     dims = 1;
     w = _w;
     h = 1;
     d = 1;
     c = 1;
-
+//计算总大小并分配内存
     cstep = alignSize(w * elemsize, 16) / elemsize;
 
     size_t totalsize = alignSize(total() * elemsize, 4);
     if (totalsize > 0)
-    {
-        if (allocator)
+    { //分配内存：数据区 + 引用计数器
+         if (allocator)
             data = allocator->fastMalloc(totalsize + (int)sizeof(*refcount));
         else
             data = fastMalloc(totalsize + (int)sizeof(*refcount));
     }
-
+    //初始化引用计数器
     if (data)
     {
         refcount = (int*)(((unsigned char*)data) + totalsize);
@@ -1120,7 +1121,7 @@ void VkImageMat::create_like(const VkImageMat& im, VkAllocator* _allocator)
 #endif // NCNN_VULKAN
 
 void Mat::substract_mean_normalize(const float* mean_vals, const float* norm_vals)
-{
+{// // 1. 根据参数，创建一个 Scale 或 Bias Layer  借用layer设计避免重复
     Layer* op;
 
     if (mean_vals && !norm_vals)
@@ -1706,3 +1707,11 @@ void requantize_from_int32_to_int8(const Mat& src, Mat& dst, const Mat& scale_in
 }
 
 } // namespace ncnn
+// 函数/操作符	类别	核心作用
+// Mat() / create()	生命周期	创建/分配一个 Mat
+// operator=	生命周期	浅拷贝 (高效共享)
+// clone()	生命周期	深拷贝 (数据隔离)
+// reshape()	形状	改变维度，通常是零拷贝视图
+// from_pixels_resize()	数据交互	图像转Mat，推理的起点
+// substract_mean_normalize()	数据交互	预处理，推理前必备
+// operator[]	数据交互	访问元素，读写数据
