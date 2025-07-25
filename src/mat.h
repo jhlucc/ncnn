@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+//这些预处理指令 (#if) 会在编译时检查 CPU 是否支持特定的指令集。
 #if __ARM_NEON
 #include <arm_neon.h>
 #endif
@@ -25,11 +26,12 @@
 #include <riscv_vector.h>
 #include "cpu.h" // cpu_riscv_vlenb()
 #endif
-
+//定义了 ncnn 的内存分配器。ncnn 允许用户自定义内存分配和释放的策略，比如使用内存池来避免频繁的 malloc/free 开销。Mat 的内存就是通过这个分配器来管理的。
 #include "allocator.h"
+//定义了 ncnn::Option 类，我们在 squeezenet.cpp 中见过它 (squeezenet.opt.use_vulkan_compute = true;)。它是一个配置中心，Mat 的一些行为（比如使用哪个分配器）会受到它的影响。
 #include "option.h"
 #include "platform.h"
-
+//这是为了方便在特定平台（这里是 Android）上使用的便利性接口。
 #if NCNN_PIXEL
 #if NCNN_PLATFORM_API
 #if __ANDROID_API__ >= 9
@@ -45,7 +47,7 @@ namespace ncnn {
 class VkMat;
 class VkImageMat;
 #endif // NCNN_VULKAN
-
+//NCNN_EXPORT 是一个宏，用于处理动态链接库（DLL）的符号导出
 // the three dimension matrix
 class NCNN_EXPORT Mat
 {

@@ -18,6 +18,7 @@ namespace ncnn {
 
 Mat Mat::clone(Allocator* _allocator) const
 {
+    //// 1. 处理空 Mat 的情况
     if (empty())
         return Mat();
 
