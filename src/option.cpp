@@ -73,3 +73,7 @@ Option::Option()
 }
 
 } // namespace ncnn
+
+// 在 load_param 和 load_model 过程中，Net 会读取 opt 的配置，来决定如何创建 Layer（比如是创建 Layer_final 代理，还是纯 CPU Layer）。
+// 在 create_pipeline 时，opt 会被传递给每个 Layer，Layer 根据 opt 来初始化自己的计算管线（比如 GPU Layer 会根据 use_fp16_... 来选择不同的 shader）。
+// 在 forward 时，opt 会被再次传递，Layer 根据它来决定运行时的行为（比如使用多少个线程）。

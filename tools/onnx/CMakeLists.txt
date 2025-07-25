@@ -1,5 +1,5 @@
 
-find_package(protobuf CONFIG)
+find_package(protobuf CONFIG) # 这是 CMake 现代化的库查找方式（Config 模式）。它会寻找一个由 Protobuf 自身安装时提供的 protobuf-config.cmake 或 protobufConfig.cmake 文件。这种方式通常更可靠，能获取到精确的库路径、版本号和 target 信息。
 
 if(protobuf_FOUND)
     set(PROTOBUF_FOUND ${protobuf_FOUND})

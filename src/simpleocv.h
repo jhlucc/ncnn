@@ -490,3 +490,10 @@ NCNN_EXPORT Size getTextSize(const std::string& text, int fontFace, double fontS
 #endif // NCNN_SIMPLEOCV
 
 #endif // NCNN_SIMPLEOCV_H
+
+
+//目的明确: 为了让示例程序不强制依赖庞大的 OpenCV。
+// 实现轻量: 借助
+// stb_image 这样的优秀单头文件库来完成核心功能，避免了造轮子。
+// 接口一致: 完美模仿了
+//  OpenCV 的 API，使得用户可以在完整版 OpenCV 和 simpleocv 之间无缝切换，示例代码甚至不需要修改。

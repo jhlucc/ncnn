@@ -40,7 +40,7 @@ static bool read_proto_from_binary(const char* filepath, onnx::ModelProto* messa
 
     return success;
 }
-
+// 从 NodeProto 的 attribute 中获取各种类型的参数
 static std::vector<int> get_node_attr_ai(const onnx::NodeProto& node, const char* key)
 {
     std::vector<int> v;
@@ -222,7 +222,7 @@ static float get_node_attr_from_input_f(const onnx::TensorProto& tp)
 
     return v;
 }
-
+// (有些 ONNX 算子的参数不是存在 attribute 里, 而是作为另一个输入 tensor)
 static std::vector<int> get_node_attr_from_input_ai(const onnx::TensorProto& tp)
 {
     int size = 0;
@@ -2963,17 +2963,17 @@ For more information, please refer to https://github.com/pnnx/pnnx\n");
     const char* onnxpb = argv[1];
     const char* ncnn_prototxt = argc == 4 ? argv[2] : "ncnn.param";
     const char* ncnn_modelbin = argc == 4 ? argv[3] : "ncnn.bin";
-
+//    加载 ONNX 模型
     onnx::ModelProto model;
 
-    // load
+    // 从二进制文件读取 protobuf 消息
     bool s1 = read_proto_from_binary(onnxpb, &model);
     if (!s1)
     {
         fprintf(stderr, "read_proto_from_binary failed\n");
         return -1;
     }
-
+//  准备文件和权重
     FILE* pp = fopen(ncnn_prototxt, "wb");
     FILE* bp = fopen(ncnn_modelbin, "wb");
 
@@ -3594,7 +3594,10 @@ For more information, please refer to https://github.com/pnnx/pnnx\n");
             fprintf(stderr, "  output = %s\n", output_name.c_str());
         }
         */
-
+        //确定词性。 代码通过一个巨大的 if-else if 链，将 ONNX 的 op_type (一个字符串) 映射到 ncnn 中具体的层类型 (另一个字符串)。
+//        不仅仅是简单替换: 请注意 Conv 的例子。它不仅仅是 Conv -> Convolution。代码会先通过 get_node_attr_i(node, "group", 1) 获取 group 属性。如果 group > 1，
+//                    它会被映射成 ncnn 中更特殊的 ConvolutionDepthWise 层。这体现了 onnx2ncnn 的智能之处：它会根据 ONNX 节点的属性，选择最合适的 ncnn 实现。
+//        多个 ONNX op 可能被映射到同一个 ncnn 层。例如 Abs, Acos, Ceil 等都被映射到了 ncnn 的 UnaryOp。
         if (op == "Abs")
         {
             fprintf(pp, "%-16s", "UnaryOp");
@@ -6139,3 +6142,14 @@ For more information, please refer to https://github.com/pnnx/pnnx\n");
 
     return 0;
 }
+
+
+//加载模型: 从命令行接收 .onnx 文件路径，并使用 Protobuf 库将其内容加载到一个 onnx::ModelProto C++ 对象中。
+//图优化（Graph Fusion）: 在正式转换之前，进行一系列“图融合”操作。这是性能优化的关键一步，它会识别出一些可以合并成单个、更高效 ncnn 算子的模式。
+//构建和写入 .param 文件:
+//遍历优化后的图中的每一个节点 (NodeProto)。
+//根据节点的 op_type (如 "Conv", "ReLU")，将其映射到 ncnn 中对应的层类型 (如 "Convolution", "ReLU")。
+//从节点的 attribute 中提取参数（如卷积核大小、步长等）。
+//将这些信息按照 ncnn 的格式写入 .param 文件。
+//构建和写入 .bin 文件:
+//将 ONNX 模型中的权重 (initializer) 按照 ncnn 的格式和顺序写入 .bin 文件

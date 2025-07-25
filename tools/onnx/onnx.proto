@@ -503,3 +503,27 @@ message OperatorSetIdProto {
   // This field MUST be present in this version of the IR.
   optional int64 version = 2;
 }
+
+
+这个文件虽然长，但核心结构很清晰，主要就是以下几个 message：
+
+ModelProto: 这是最顶层的结构，代表一个完整的 .onnx 文件。它包含了：
+
+graph: 核心的计算图。
+opset_import: 声明了模型使用的算子集版本（非常重要，比如 opset=11 或 opset=13）。
+producer_name/version: 生成这个模型的工具信息。
+GraphProto: 这是计算图的定义，是模型的核心。它包含了：
+
+node: 一个 NodeProto 的列表，代表图里所有的计算节点（也就是“层”或“算子”）。
+initializer: 一个 TensorProto 的列表，存储了模型的权重、偏置等常量数据。
+input / output: 定义了整个图的输入和输出。
+value_info: 包含了图中中间变量的类型和形状信息。
+NodeProto: 定义了一个计算节点。
+
+op_type: 节点的操作类型，比如 "Conv", "Relu", "Add", "Gemm" (全连接)。这是 onnx2ncnn 进行操作映射的关键。
+input / output: 节点的输入和输出张量的名字，定义了节点间的连接关系。
+attribute: 一个 AttributeProto 列表，存储了该节点的所有参数，比如卷积核大小、步长、padding 方式等。
+TensorProto: 定义了张量，也就是多维数组，用于存储权重、输入输出数据等。和 Caffe 的 BlobProto 类似。
+
+AttributeProto: 定义了节点的属性，可以是浮点数、整数、字符串、张量等各种类型。
+

@@ -259,7 +259,7 @@ static float vstr_to_float(const char vstr[16])
     //     fprintf(stderr, "v = %f\n", v);
     return sign ? (float)v : (float)-v;
 }
-
+// 在 net.cpp 中，Net::load_param 调用 ParamDict::load_para
 int ParamDict::load_param(const DataReader& dr)
 {
     clear();

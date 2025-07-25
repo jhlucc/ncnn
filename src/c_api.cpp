@@ -1529,3 +1529,11 @@ void ncnn_draw_line_c4(unsigned char* pixels, int w, int h, int x0, int y0, int 
 #endif
 
 #endif /* NCNN_C_API */
+
+
+
+// c_api.cpp 是一个典型的、写得非常好的 C++/C 混合编程 的范例。
+//
+// 实现了语言解耦: 它是 ncnn 能够被多种语言（如 pyncnn for Python）使用的基石。
+// 封装了 C++ 特性: 它通过不透明指针和函数封装，向 C 语言使用者隐藏了所有 C++ 的复杂性（类、模板、继承等）。
+// 展示了高级适配器模式: 在处理自定义 Layer 这种需要双向回调的场景时，它使用了适配器类 (Layer_c_api) 和函数指针相结合的精巧设计。

@@ -64,3 +64,5 @@ private:
 } // namespace ncnn
 
 #endif // NCNN_PARAMDICT_H
+// 你就能彻底明白 .param 文件中的 key=value 字符串是如何被解析、存储，并最终传递给每个 Layer 的。
+

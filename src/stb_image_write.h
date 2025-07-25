@@ -1722,3 +1722,7 @@ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 */
+
+
+// stb_image.h / stb_image_write.h	第三方库	作为 simpleocv 的后端，实现无依赖的图像读写。
+// vulkan_header_fix.h	兼容性补丁	修复因使用裁剪版 simplevk.h 而可能出现的跨平台编译问题。

@@ -23,14 +23,15 @@
 #endif // NCNN_VULKAN
 
 namespace ncnn {
-
+//MPL (Pointer to Implementation) Idiom，也叫“d-指针”模式。
 class NetPrivate
 {
 public:
     NetPrivate(Option& _opt);
 
     Option& opt;
-
+//隐藏实现: 用户只需要包含 net.h，而看不到 blobs, layers 这些复杂的内部数据结构。接口更干净。
+    //如果 NetPrivate 的实现（比如增加一个成员变量）发生改变，只需要重新编译 net.cpp。所有包含了 net.h 的用户代码不需要重新编译，大大加快了大型项目的编译速度。
 #if NCNN_VULKAN
 
     int upload_model();
@@ -991,7 +992,7 @@ int Net::load_param(const DataReader& dr)
         NCNN_LOGE("invalid layer_count or blob_count");
         return -1;
     }
-
+    // 调整 containers 的大小
     d->layers.resize((size_t)layer_count);
     d->blobs.resize((size_t)blob_count);
 
@@ -1554,7 +1555,7 @@ int Net::load_model(const DataReader& dr)
         }
     }
 #endif // NCNN_VULKAN
-
+    // 将数据流包装成 ModelBin
     ModelBinFromDataReader mb(dr);
     for (int i = 0; i < layer_count; i++)
     {
@@ -1567,7 +1568,7 @@ int Net::load_model(const DataReader& dr)
             ret = -1;
             break;
         }
-
+        // 1. 调用每个 layer 自己的 load_model
         int lret = layer->load_model(mb);
         if (lret != 0)
         {
@@ -1581,7 +1582,7 @@ int Net::load_model(const DataReader& dr)
         }
 
         Option opt1 = get_masked_option(opt, layer->featmask);
-
+        // 调用每个 layer 自己的 create_pipeline
         int cret = layer->create_pipeline(opt1);
         if (cret != 0)
         {

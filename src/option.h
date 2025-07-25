@@ -24,7 +24,7 @@ public:
     // light mode
     // intermediate blob will be recycled when enabled
     // enabled by default
-    bool lightmode;
+    bool lightmode; //一个 Layer 的输出一旦被后续 Layer 使用完毕，它所占用的 Mat 内存就会被立即回收。 极大地降低了峰值内存占用，对于在内存受限的设备（如手机）上运行大模型至关重要
 
     // use pack8 shader
     bool use_shader_pack8;

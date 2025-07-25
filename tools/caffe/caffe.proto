@@ -1661,3 +1661,8 @@ message PReLUParameter {
   // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
+
+//caffe2ncnn 工具的工作就是读取 Caffe 的模型文件
+//（.prototxt 和 .caffemodel），然后把它们转换成 ncnn 的格式。要正确地读取和解析这些文件，caffe2ncnn 必须首先知道这些文件的“语法规则”和“数据结构”
+
+//对于 ncnn 来说，这个文件是构建 caffe2ncnn 转换工具的必要蓝图。 ncnn 通过它生成 C++ 代码，从而能够读懂 Caffe 模型，并将其中的信息逐一提取出来，最终转换成自己的 .param 和 .bin 格式。

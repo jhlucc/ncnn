@@ -99,3 +99,4 @@ public:
 } // namespace ncnn
 
 #endif // NCNN_PIPELINE_H
+//阅读 pipeline.cpp 可能感觉像是在直接阅读 Vulkan 教程，这很正常。你不需要理解每一行 Vulkan API 的具体作用，只需要抓住它的核心设计思想：将耗时的 GPU 任务创建过程提前到初始化阶段，并通过缓存和硬件自适应来优化这一过程，最终为上层的 Layer 提供一个可以被反复高效调用的、固化了的计算任务。

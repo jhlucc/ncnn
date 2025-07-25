@@ -2194,3 +2194,9 @@ void unload_vulkan_driver();
 #endif // NCNN_VULKAN
 
 #endif // NCNN_SIMPLEVK_H
+
+//
+//simpleocv: 摆脱 OpenCV
+//simpleomp: 摆脱 OpenMP 运行时
+//simplestl: 摆脱 C++ 运行时（在极端情况下）
+//simplevk: 摆脱 Vulkan SDK 和 Loader
